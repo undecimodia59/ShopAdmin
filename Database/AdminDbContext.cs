@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using admin_panel.Data.Models;
+using Domain.Models;
 
-namespace admin_panel.Data.Database
+namespace Database
 {
     public class AdminDbContext : IdentityDbContext<IdentityUser>
     {
