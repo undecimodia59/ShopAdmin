@@ -1,10 +1,12 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Domain.Models
 {
     public class Client
     {
-        public string Id { get; set; }
-        public string Username { get; set; }
+        [Key]
         public long UserId { get; set; }
+        public string? Username { get; set; }
         public DateTime DateJoined { get; set; }
     }
 }

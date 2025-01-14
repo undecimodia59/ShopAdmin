@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using Database.Exceptions;
 
 namespace Database.Abstract
 {
@@ -27,6 +28,16 @@ namespace Database.Abstract
         public async Task<T?> FindSingleAsync(Expression<Func<T, bool>> predicate)
         {
             return await _dbSet.Where(predicate).FirstOrDefaultAsync();
+        }
+
+        public async Task<T> FindSingleOrThrowAsync(Expression<Func<T, bool>> predicate)
+        {
+            var tmp = await _dbSet.Where(predicate).FirstOrDefaultAsync();
+            if (tmp == null)
+            {
+                throw new NotFoundException();
+            }
+            return tmp;
         }
 
         public async Task<T?> GetByIdAsync(int id)

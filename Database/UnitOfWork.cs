@@ -11,13 +11,15 @@ namespace Database
         public IItemsRepository Items { get; }
         public IUsersRepository Users { get; }
         public ICategoriesRepository Categories { get; }
+        public ICartRepository Cart { get; }
 
         public UnitOfWork(AdminDbContext dbContext,
                           IOrdersRepository orders,
                           IClientsRepository clients,
                           IItemsRepository items,
                           IUsersRepository users,
-                          ICategoriesRepository categories)
+                          ICategoriesRepository categories,
+                          ICartRepository cart)
         {
             _dbContext = dbContext;
             Orders = orders;
@@ -25,6 +27,7 @@ namespace Database
             Items = items;
             Users = users;
             Categories = categories;
+            Cart = cart;
         }
 
         public async Task CommitAsync()

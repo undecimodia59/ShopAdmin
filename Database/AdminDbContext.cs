@@ -27,12 +27,6 @@ namespace Database
                 .HasOne(oi => oi.Order)
                 .WithMany(o => o.OrderItems)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            // Cart -> CartItem
-            builder.Entity<CartItem>()
-                .HasOne(ci => ci.Cart)
-                .WithMany(c => c.CartItems)
-                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

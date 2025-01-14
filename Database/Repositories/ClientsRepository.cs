@@ -1,5 +1,6 @@
 using Domain.Models;
 using Database.Abstract;
+using Database.Exceptions;
 
 namespace Database.Repositories
 {
@@ -12,16 +13,27 @@ namespace Database.Repositories
             return await this.FindSingleAsync(c => c.UserId == userId);
         }
 
-        public async Task UpdateUsernameAsync(long userId, string newUsername)
+        public async Task<Client> GetByUserIdOrThrow(long userId)
         {
-            // Maybe move this logic to this.GetOrThrow?
-            var user = await this.GetByUserId(userId);
-            if (user == null)
-            {
-                throw new Exception("User not found!");
-            }
+            return await this.FindSingleOrThrowAsync(c => c.UserId == userId);
+        }
+
+        public async Task UpdateUsernameAsync(long userId, string? newUsername)
+        {
+            var user = await GetByUserIdOrThrow(userId);
             user.Username = newUsername;
             this.Update(user);
+        }
+
+        public async Task AddUser(Client entity)
+        {
+            // Check if userId already exists
+            if (GetByUserId(entity.UserId) != null)
+            {
+                throw new AlreadyExistsException();
+            }
+
+            await this.AddAsync(entity);
         }
     }
 }
