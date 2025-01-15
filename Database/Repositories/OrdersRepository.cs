@@ -9,7 +9,7 @@ namespace Database.Repositories
 
         public async Task<IEnumerable<Order>> GetUserOrdersByUserIdAsync(long userId)
         {
-            return await this.FindAsync(order => order.Client.UserId == userId);
+            return await this.FindAsync(order => order.Owner.UserId == userId);
         }
     }
 }

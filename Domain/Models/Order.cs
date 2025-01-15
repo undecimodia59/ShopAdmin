@@ -11,7 +11,8 @@ namespace Domain.Models
     {
         public int Id { get; set; }
         public DateTime OrderDate { get; set; }
-        public Client Client { get; set; }
+        public string Address { get; set; }
+        public Client Owner { get; set; }
         public ICollection<OrderItem> OrderItems { get; set; }
         public OrderStatus OrderStatus { get; set; }
 

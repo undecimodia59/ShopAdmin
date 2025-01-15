@@ -4,102 +4,152 @@ using Domain.Models;
 
 namespace Services
 {
-    public class ShopService : IShopService
+    public class ShopService(UnitOfWork unitOfWork) : IShopService
     {
-        private readonly UnitOfWork _unitOfWork;
-
-        public ShopService(UnitOfWork unitOfWork)
-        {
-            _unitOfWork = unitOfWork;
-        }
-
         // Client
         public async Task<Client> RegisterClient(long userId, string? username)
         {
-            var utcNowPlus2 = DateTime.UtcNow.AddHours(2);
-            Client client = new Client { UserId = userId, Username = username, DateJoined = utcNowPlus2 };
-            await this._unitOfWork.Clients.AddAsync(client);
-            await this._unitOfWork.CommitAsync();
+            Client client = new Client
+            {
+                UserId = userId,
+                Username = username,
+                DateJoined = this.CurrentDateTime(),
+            };
+            await unitOfWork.Clients.AddAsync(client);
+            await unitOfWork.CommitAsync();
 
             return client;
         }
 
         public async Task<Client> GetClient(long userId)
         {
-            return await this._unitOfWork.Clients.GetByUserIdOrThrow(userId);
+            return await unitOfWork.Clients.GetByUserIdOrThrow(userId);
         }
 
         public async Task UpdateClientUsername(long userId, string? username)
         {
-            await this._unitOfWork.Clients.UpdateUsernameAsync(userId, username);
-            await this._unitOfWork.CommitAsync();
+            await unitOfWork.Clients.UpdateUsernameAsync(userId, username);
+            await unitOfWork.CommitAsync();
         }
 
         public async Task<IEnumerable<Order>> GetClientOrders(long userId)
         {
-            return await this._unitOfWork.Orders.FindAsync(o => o.Client.UserId == userId);
+            return await unitOfWork.Orders.FindAsync(o => o.Owner.UserId == userId);
         }
 
         public async Task<IEnumerable<CartItem>> GetClientCartItems(long userId)
         {
-            var cart = await this._unitOfWork.Cart.FindSingleOrThrowAsync(c => c.Client.UserId == userId);
+            var cart = await unitOfWork.Cart.FindSingleOrThrowAsync(c => c.Owner.UserId == userId);
             return cart.CartItems;
         }
 
         public async Task<IEnumerable<long>> GetAllClientsUserId()
         {
-            return (await this._unitOfWork.Clients.GetAllAsync()).Select(c => c.UserId);
+            return (await unitOfWork.Clients.GetAllAsync()).Select(c => c.UserId);
         }
 
 
         // Items
         public async Task<Item> GetItemById(int id)
         {
-            return await this._unitOfWork.Items.FindSingleOrThrowAsync(i => i.Id == id);
+            return await unitOfWork.Items.FindSingleOrThrowAsync(i => i.Id == id);
         }
 
+        public async Task CreateItem(Item item)
+        {
+            await unitOfWork.Items.AddAsync(item);
+            await unitOfWork.CommitAsync();
+        }
+
+        // Categories
+        public async Task<IEnumerable<Category>> GetRootCategories()
+        {
+            return await unitOfWork.Categories.GetRootCategoriesAsync();
+        }
+
+        public async Task<IEnumerable<Category>> GetSubCategories(int categoryId)
+        {
+            return await unitOfWork.Categories.GetCategoriesByParentIdAsync(categoryId);
+        }
+
+        public async Task<IEnumerable<Item>> GetCategoryItems(int categoryId)
+        {
+            return await unitOfWork.Items.FindAsync(i => i.Category.Id == categoryId);
+        }
+
+        public async Task CreateCategory(Category category)
+        {
+            await unitOfWork.Categories.AddAsync(category);
+            await unitOfWork.CommitAsync();
+        }
 
         // Carts
         public async Task<Cart> AddItemToCart(long userId, int itemId)
         {
-            var cart = await this._unitOfWork.Cart.FindSingleOrThrowAsync(c => c.Client.UserId == userId);
             var itemToAdd = await this.GetItemById(itemId);
-            // TODO: Check CartRepository.AddItem
-            return null;
+            var cart = await unitOfWork.Cart.AddItem(userId, itemToAdd);
+            await unitOfWork.CommitAsync();
+
+            return cart;
         }
 
         public async Task<Cart> GetClientCart(long userId)
         {
-            throw new NotImplementedException();
+            return (await unitOfWork.Clients.FindSingleOrThrowAsync(user => user.UserId == userId)).Cart;
         }
 
         public async Task ClearCart(long userId)
         {
-            throw new NotImplementedException();
+            await unitOfWork.Cart.ClearCart(userId);
+            await unitOfWork.CommitAsync();
         }
 
-        public async Task<Cart> RemoveItemFromCart(long userId, int cartItemId)
+        public async Task<Cart> RemoveItemFromCart(long userId, int itemId)
         {
-            throw new NotImplementedException();
+            var cart = await unitOfWork.Cart.RemoveItem(userId, itemId);
+            await unitOfWork.CommitAsync();
+            return cart;
         }
 
 
         // Orders
         public async Task<Order> CreateOrder(long userId, string deliveryAddress)
         {
-            throw new NotImplementedException();
+            var client = await this.GetClient(userId);
+            var cart = client.Cart;
+            var orderItems = cart.CartItems.Select(ci => ci.ToOrderItem());
+
+            var order = new Order
+            {
+                OrderDate = this.CurrentDateTime(),
+                OrderStatus = OrderStatus.Accepted,
+                OrderItems = orderItems.ToList(),
+                Owner = client,
+                Address = deliveryAddress,
+            };
+            await unitOfWork.Orders.AddAsync(order);
+            await unitOfWork.CommitAsync();
+
+            return order;
         }
 
-        public async Task<Order> UpdateOrderStatus(int orderId, string newStatus)
+        public async Task<Order> UpdateOrderStatus(int orderId, OrderStatus newStatus)
         {
-            throw new NotImplementedException();
+            var order = await unitOfWork.Orders.FindSingleOrThrowAsync(o => o.Id == orderId);
+            order.OrderStatus = newStatus;
+            await unitOfWork.CommitAsync();
+
+            return order;
         }
 
         public async Task<Order> GetOrder(int orderId)
         {
-            throw new NotImplementedException();
+            return await unitOfWork.Orders.FindSingleOrThrowAsync(o => o.Id == orderId);
         }
 
+        private DateTime CurrentDateTime()
+        {
+            return DateTime.UtcNow.AddHours(2);
+        }
     }
-
 }

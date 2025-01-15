@@ -14,6 +14,14 @@ namespace Services.Abstract
 
         // Items
         public Task<Item> GetItemById(int id);
+        public Task CreateItem(Item item);
+        
+        // Categories
+        public Task<IEnumerable<Category>> GetRootCategories();
+        public Task<IEnumerable<Category>> GetSubCategories(int categoryId);
+        public Task<IEnumerable<Item>> GetCategoryItems(int categoryId);
+        public Task CreateCategory(Category category);
+        
 
         // Carts
         public Task<Cart> AddItemToCart(long userId, int itemId);
@@ -23,7 +31,7 @@ namespace Services.Abstract
 
         // Orders
         public Task<Order> CreateOrder(long userId, string deliveryAddress);
-        public Task<Order> UpdateOrderStatus(int orderId, string newStatus);
+        public Task<Order> UpdateOrderStatus(int orderId, OrderStatus newStatus);
         public Task<Order> GetOrder(int orderId);
     }
 }

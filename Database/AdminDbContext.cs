@@ -21,10 +21,22 @@ namespace Database
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-
-            // Order -> OrderItem
+            
+            // Make connection Client.Cart => Cart.Owner
+            builder.Entity<Cart>()
+                .HasOne(c => c.Owner)
+                .WithOne(c => c.Cart)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            // Make connection Order.Owner => Client.Orders
+            builder.Entity<Order>()
+                .HasOne(o => o.Owner)
+                .WithMany(c => c.Orders)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            // Make connection OrderItem.Order => Order.OrderItems
             builder.Entity<OrderItem>()
-                .HasOne(oi => oi.Order)
+                .HasOne(oi => oi.Owner)
                 .WithMany(o => o.OrderItems)
                 .OnDelete(DeleteBehavior.Cascade);
         }

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using Database.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace Database.Abstract
 {

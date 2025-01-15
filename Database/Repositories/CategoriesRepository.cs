@@ -12,9 +12,9 @@ namespace Database.Repositories
             return await this.FindAsync(category => category.Parent == null);
         }
 
-        public async Task<IEnumerable<Category>> GetCategoriesByParentAsync(Category parent)
+        public async Task<IEnumerable<Category>> GetCategoriesByParentIdAsync(int parent)
         {
-            return await this.FindAsync(category => category.Parent == parent);
+            return await this.FindAsync(category => category.Parent != null && category.Parent.Id == parent);
         }
     }
 }
